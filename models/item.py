@@ -2,7 +2,6 @@ from typing import Dict, List, Union
 
 from db import db
 
-
 ItemJSON = Dict[str, Union[int, str, float]]
 
 
