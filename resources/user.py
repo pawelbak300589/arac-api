@@ -8,7 +8,6 @@ from flask_jwt_extended import (
     jwt_required,
     get_jwt,
 )
-from marshmallow import ValidationError
 from models.user import UserModel
 from schemas.user import UserSchema
 from blocklist import BLOCKLIST
@@ -26,10 +25,8 @@ user_schema = UserSchema()
 class UserRegister(Resource):
     @classmethod
     def post(cls):
-        try:
-            user = user_schema.load(request.get_json())
-        except ValidationError as err:
-            return err.messages, 400
+        user_json = request.get_json()
+        user = user_schema.load(user_json)
 
         if UserModel.find_by_username(user.username):
             return {"message": USER_ALREADY_EXISTS}, 400
@@ -61,11 +58,8 @@ class User(Resource):
 class UserLogin(Resource):
     @classmethod
     def post(cls):
-        try:
-            user_json = request.get_json()
-            user_data = user_schema.load(user_json)
-        except ValidationError as err:
-            return err.messages, 400
+        user_json = request.get_json()
+        user_data = user_schema.load(user_json)
 
         user = UserModel.find_by_username(user_data.username)
 
@@ -81,8 +75,7 @@ class UserLogout(Resource):
     @classmethod
     @jwt_required()
     def post(cls):
-        # jti is "JWT ID", a unique identifier for a JWT.
-        jti = get_jwt()["jti"]
+        jti = get_jwt()["jti"]  # jti is "JWT ID", a unique identifier for a JWT.
         user_id = get_jwt_identity()
         BLOCKLIST.add(jti)
         return {"message": USER_LOGGED_OUT.format(user_id)}, 200
